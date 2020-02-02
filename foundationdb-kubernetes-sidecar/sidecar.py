@@ -114,11 +114,16 @@ class Config(object):
                                   'written by the sidecar will be mounted in '
                                   'the main container.'),
                             default='/var/dynamic-conf')
+        parser.add_argument('--substitutions-file',
+                            help=('A file containing substitutions that '
+                                  'should be available for the monitor conf '))
         args = parser.parse_args()
 
         self.bind_address = args.bind_address
         self.input_dir = args.input_dir
         self.output_dir = args.output_dir
+
+        self.substitutions_file = args.substitutions_file
 
         self.enable_tls = args.tls
         self.copy_files = args.copy_file or []
@@ -181,6 +186,15 @@ class Config(object):
 
         if os.getenv('OUTPUT_DIR'):
             self.output_dir = os.getenv('OUTPUT_DIR')
+
+        if os.getenv('SUBSTITUTIONS_FILE'):
+            self.substitutions_file = os.getenv('SUBSTITUTION_FILE')
+
+        if self.substitutions_file:
+            with open(self.substitutions_file) as subs_file:
+                extra_substitutions = json.load(subs_file)
+                for key, value in subs_file.items():
+                    self.substitutions[key] = value
 
         if 'ADDITIONAL_SUBSTITUTIONS' in config and config['ADDITIONAL_SUBSTITUTIONS']:
             for key in config['ADDITIONAL_SUBSTITUTIONS']:
